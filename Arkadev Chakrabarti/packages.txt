@@ -1,0 +1,9 @@
+List of Python libraries required to run the code:
+
+streamlit
+python-docx
+pandas
+seaborn
+numpy
+scikit-learn
+nltk
