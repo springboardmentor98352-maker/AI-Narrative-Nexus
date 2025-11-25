@@ -95,7 +95,7 @@ def read_full_text(file_path: str) -> str:
     
     Supported formats: .txt, .csv, .docx
     - For .txt: returns all text content
-    - For .csv: joins all cells with spaces (good for text analysis)
+    - For .csv: intelligently extracts text columns (tries 'text', 'content', 'message' columns first)
     - For .docx: extracts all paragraph text
     
     This function performs basic cleaning:
@@ -119,11 +119,30 @@ def read_full_text(file_path: str) -> str:
     if ext == ".csv":
         try:
             with open(file_path, newline="", encoding="utf-8", errors="replace") as csvfile:
-                reader = csv.reader(csvfile)
+                reader = csv.DictReader(csvfile)
                 all_text = []
+                
+                # Try to find text-like columns
+                first_row = None
+                text_columns = []
+                
                 for row in reader:
-                    # Join all cells in the row with space
-                    all_text.append(" ".join(row))
+                    if first_row is None:
+                        first_row = row
+                        # Look for common text column names
+                        for col in ['text', 'content', 'message', 'body', 'description', 'tweet', 'post', 'comment']:
+                            if col in row:
+                                text_columns.append(col)
+                        
+                        # If no common columns found, use all columns
+                        if not text_columns:
+                            text_columns = list(row.keys())
+                    
+                    # Extract text from identified columns
+                    row_text = " ".join([str(row.get(col, "")) for col in text_columns])
+                    if row_text.strip():
+                        all_text.append(row_text)
+                
             # Join all rows with space and normalize whitespace
             text = " ".join(all_text)
             text = " ".join(text.split())
@@ -145,3 +164,85 @@ def read_full_text(file_path: str) -> str:
             return f"[Error reading DOCX file: {e}]"
 
     return f"[Cannot read {ext} files — unsupported format]"
+
+
+def get_text_summary(text: str, max_words: int = 100) -> str:
+    """Generate an intelligent summary by analyzing the text content.
+    
+    Args:
+        text: The text to summarize
+        max_words: Maximum number of words to consider for analysis
+    
+    Returns:
+        A descriptive summary of the text content
+    """
+    if not text or len(text.strip()) == 0:
+        return "Empty text file with no content."
+    
+    words = text.split()
+    if len(words) == 0:
+        return "No readable content found in the file."
+    
+    # Analyze content characteristics
+    total_words = len(words)
+    unique_words = len(set([w.lower() for w in words]))
+    
+    # Sample text for analysis (first 1000 words)
+    sample_text = " ".join(words[:1000]).lower()
+    
+    # Detect content type based on keywords
+    content_type = "general text"
+    context_info = []
+    
+    # Check for social media content
+    if "@" in sample_text or "tweet" in sample_text or "retweet" in sample_text:
+        content_type = "social media posts"
+        if "airline" in sample_text or "flight" in sample_text:
+            context_info.append("about airlines and flight experiences")
+        if "sentiment" in sample_text or "positive" in sample_text or "negative" in sample_text:
+            context_info.append("with sentiment analysis data")
+    
+    # Check for reviews or feedback
+    elif any(word in sample_text for word in ["review", "rating", "customer", "feedback"]):
+        content_type = "customer reviews or feedback"
+    
+    # Check for news or articles
+    elif any(word in sample_text for word in ["article", "report", "news", "journalist"]):
+        content_type = "news articles or reports"
+    
+    # Check for conversational data
+    elif any(word in sample_text for word in ["chat", "message", "conversation", "reply"]):
+        content_type = "conversational messages"
+    
+    # Check for product/service mentions
+    if any(brand in sample_text for brand in ["virgin", "united", "delta", "american airlines", "southwest"]):
+        if not context_info:
+            context_info.append("related to airline services")
+    
+    # Build summary
+    summary_parts = [f"This file contains {content_type}"]
+    
+    if context_info:
+        summary_parts.append(" " + ", ".join(context_info))
+    
+    summary_parts.append(f". It has approximately {total_words:,} words with {unique_words:,} unique terms")
+    
+    # Add sentiment/tone detection
+    sentiment_words = {
+        "positive": ["good", "great", "excellent", "love", "best", "happy", "thanks", "amazing"],
+        "negative": ["bad", "worst", "terrible", "hate", "awful", "poor", "disappointed", "angry"],
+    }
+    
+    pos_count = sum(1 for word in sentiment_words["positive"] if word in sample_text)
+    neg_count = sum(1 for word in sentiment_words["negative"] if word in sample_text)
+    
+    if pos_count > neg_count * 1.5:
+        summary_parts.append(", predominantly positive in tone")
+    elif neg_count > pos_count * 1.5:
+        summary_parts.append(", predominantly negative in tone")
+    elif pos_count > 0 and neg_count > 0:
+        summary_parts.append(", with mixed sentiments")
+    
+    summary_parts.append(".")
+    
+    return "".join(summary_parts)

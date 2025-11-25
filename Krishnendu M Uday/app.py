@@ -6,6 +6,7 @@ from narrativenexus_utils import (
     get_sample_files,
     parse_preview,
     read_full_text,
+    get_text_summary,
 )
 from narrativenexus_preprocess import clean_text, tokenize, SPACY_AVAILABLE
 
@@ -93,17 +94,85 @@ st.markdown("""
     }
     
     /* Metric styling */
+    [data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 12px !important;
+        padding: 1.25rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(10px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+    }
+    
     [data-testid="stMetricValue"] {
-        color: #667eea;
-        font-size: 2rem;
-        font-weight: 700;
+        color: #ffffff !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 1.15rem !important;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3) !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        color: #ffffff !important;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
     
     /* Success/Info boxes */
-    .stSuccess, .stInfo {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
-        border-radius: 10px;
-        border-left: 4px solid #667eea;
+    .stSuccess, .stAlert, div[data-baseweb="notification"] {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.12) 0%, rgba(56, 161, 105, 0.08) 100%) !important;
+        border-radius: 10px !important;
+        border: 1.5px solid rgba(56, 161, 105, 0.3) !important;
+        box-shadow: none !important;
+        padding: 0.85rem 1.1rem !important;
+        max-width: fit-content !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    
+    .stInfo {
+        background: linear-gradient(135deg, rgba(66, 153, 225, 0.12) 0%, rgba(49, 130, 206, 0.08) 100%) !important;
+        border-radius: 10px !important;
+        border: 1.5px solid rgba(49, 130, 206, 0.3) !important;
+        box-shadow: none !important;
+        padding: 0.85rem 1.1rem !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    
+    .stSuccess p, .stInfo p, .stAlert p, div[data-baseweb="notification"] p {
+        color: #1a202c !important;
+        font-weight: 600 !important;
+        font-size: 0.98rem !important;
+        margin: 0 !important;
+        line-height: 1.5 !important;
+    }
+    
+    .stSuccess strong, .stInfo strong, .stAlert strong {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+    
+    .stSuccess div, .stInfo div, .stAlert div {
+        color: #1a202c !important;
+    }
+    
+    /* Target Streamlit's success and info icons */
+    .stSuccess svg, .stInfo svg {
+        width: 18px !important;
+        height: 18px !important;
+        color: #2d3748 !important;
     }
     
     /* File list items */
@@ -118,9 +187,18 @@ st.markdown("""
     }
     
     /* Subheaders */
-    h2, h3 {
-        color: #667eea !important;
+    h2, h3, h4 {
+        color: #ffffff !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3) !important;
         font-weight: 600 !important;
+    }
+    
+    h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    h4 {
+        font-size: 1.25rem !important;
     }
     
     /* Code blocks */
@@ -128,14 +206,45 @@ st.markdown("""
         border-radius: 10px;
         border: 1px solid rgba(102, 126, 234, 0.2);
     }
+    
+    /* Text area styling */
+    textarea {
+        color: #000000 !important;
+        font-weight: 500 !important;
+        background: #ffffff !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        line-height: 1.6 !important;
+    }
+    
+    textarea:disabled {
+        color: #000000 !important;
+        opacity: 1 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background: #fafafa !important;
+    }
+    
+    textarea:hover {
+        border-color: #cbd5e0 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    textarea:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        outline: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("NarrativeNexus")
 
-tabs = st.tabs(["Day 1 - Upload", "Day 2 - Analysis", "Day 3 - Advanced"])
+tabs = st.tabs(["📤 Upload Files", "📊 File Analysis", "🔬 Text Processing"])
 
-# Day 1: Upload
+# Upload Files Tab
 with tabs[0]:
     st.markdown("### 📤 Upload Text Files")
     st.markdown("Drag & drop your files or browse • TXT, CSV, DOCX")
@@ -171,7 +280,7 @@ with tabs[0]:
     else:
         st.info("📭 No files uploaded yet. Upload your first file above!")
 
-# Day 2: Preview & Word Count
+# File Analysis Tab
 with tabs[1]:
     st.markdown("### 📊 File Analysis")
     sample_files = get_sample_files(DATA_DIR)
@@ -225,11 +334,11 @@ with tabs[1]:
                 st.markdown("#### 👁️ File Preview")
                 st.code(preview, language=None)
     else:
-        st.info("📭 No files available. Upload files in Day 1!")
+        st.info("📭 No files available. Upload files in the Upload Files tab!")
 
-# Day 3: Advanced Analysis
+# Text Processing Tab
 with tabs[2]:
-    st.markdown("### 🔬 Advanced Text Analysis")
+    st.markdown("### 🔬 Advanced Text Processing")
     st.markdown("Preprocess text with tokenization, stopword removal, and lemmatization")
     
     sample_files = get_sample_files(DATA_DIR)
@@ -247,11 +356,65 @@ with tabs[2]:
                     else:
                         st.success(f"✓ File loaded: {len(raw)} characters")
                         
+                        # Generate content summary
+                        st.markdown("#### 📋 Content Summary")
+                        summary = get_text_summary(raw)
+                        st.info(f"**Analysis:** {summary}")
+                        
                         cleaned = clean_text(raw)
                         toks = tokenize(cleaned)
 
-                        st.markdown("#### 🧹 Cleaned Text Preview")
-                        st.code(cleaned[:2000] + ("..." if len(cleaned) > 2000 else ""), language=None)
+                        # Show before/after comparison
+                        st.markdown("#### 🔄 Text Transformation")
+                        
+                        col_before, col_after = st.columns(2)
+                        
+                        with col_before:
+                            st.markdown("**📝 Original Text (first 500 chars)**")
+                            original_preview = raw[:500].strip()
+                            st.text_area(
+                                "Original",
+                                original_preview + ("..." if len(raw) > 500 else ""),
+                                height=200,
+                                disabled=True,
+                                label_visibility="collapsed"
+                            )
+                        
+                        with col_after:
+                            st.markdown("**✨ Cleaned Text (first 500 chars)**")
+                            cleaned_preview = cleaned[:500].strip()
+                            st.text_area(
+                                "Cleaned",
+                                cleaned_preview + ("..." if len(cleaned) > 500 else ""),
+                                height=200,
+                                disabled=True,
+                                label_visibility="collapsed"
+                            )
+                        
+                        # Show full cleaned text in an expandable section
+                        with st.expander("📄 View Full Cleaned Text", expanded=False):
+                            st.markdown("**Complete cleaned output:**")
+                            st.text_area(
+                                "Full Cleaned Text",
+                                cleaned,
+                                height=400,
+                                disabled=True,
+                                label_visibility="collapsed"
+                            )
+                        
+                        # Show cleaning statistics
+                        st.markdown("#### 📈 Cleaning Statistics")
+                        stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+                        with stat_col1:
+                            reduction = ((len(raw) - len(cleaned)) / len(raw) * 100) if len(raw) > 0 else 0
+                            st.metric("🔻 Size Reduction", f"{reduction:.1f}%")
+                        with stat_col2:
+                            st.metric("📏 Original Length", f"{len(raw):,} chars")
+                        with stat_col3:
+                            st.metric("✅ Cleaned Length", f"{len(cleaned):,} chars")
+                        with stat_col4:
+                            removed = len(raw.split()) - len(cleaned.split())
+                            st.metric("🗑️ Words Removed", f"{removed:,}")
 
                         st.markdown("#### 📊 Token Analysis")
                         col1, col2 = st.columns(2)
@@ -262,15 +425,56 @@ with tabs[2]:
 
                         from collections import Counter
                         freq = Counter([t.lower() for t in toks])
-                        top = freq.most_common(20)
+                        top = freq.most_common(10)
                         
-                        st.markdown("#### 🏆 Top 20 Frequent Tokens")
+                        st.markdown("#### 🏆 Top 10 Frequent Tokens")
                         if top:
-                            # Create a more visual representation
+                            # Create a modern card-based representation
                             for i, (token, count) in enumerate(top, 1):
-                                bar_length = int((count / top[0][1]) * 30)
-                                bar = "█" * bar_length
-                                st.markdown(f"`{i:2d}` **{token}** {'`' + bar + '`'} {count}")
+                                st.markdown(f"""
+                                    <div style="
+                                        background: rgba(255, 255, 255, 0.12);
+                                        border-radius: 8px;
+                                        padding: 0.6rem 1rem;
+                                        margin: 0.4rem 0;
+                                        display: flex;
+                                        align-items: center;
+                                        backdrop-filter: blur(10px);
+                                        border: 1px solid rgba(255, 255, 255, 0.15);
+                                    ">
+                                        <div style="
+                                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                            color: white;
+                                            width: 28px;
+                                            height: 28px;
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            font-weight: 700;
+                                            font-size: 0.85rem;
+                                            margin-right: 0.9rem;
+                                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+                                        ">{i}</div>
+                                        <div style="flex: 1;">
+                                            <span style="
+                                                color: #ffffff;
+                                                font-size: 1rem;
+                                                font-weight: 600;
+                                                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+                                            ">{token}</span>
+                                        </div>
+                                        <div style="
+                                            background: rgba(255, 255, 255, 0.18);
+                                            padding: 0.25rem 0.7rem;
+                                            border-radius: 15px;
+                                            color: #ffffff;
+                                            font-weight: 600;
+                                            font-size: 0.85rem;
+                                            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+                                        ">{count}</div>
+                                    </div>
+                                """, unsafe_allow_html=True)
                         else:
                             st.write("No tokens found.")
 
@@ -279,5 +483,4 @@ with tabs[2]:
                         else:
                             st.warning("⚠ Using fallback preprocessing (spaCy not available)")
     else:
-        st.info("📭 No files available. Upload files in Day 1!")
-
+        st.info("📭 No files available. Upload files in the Upload Files tab!")

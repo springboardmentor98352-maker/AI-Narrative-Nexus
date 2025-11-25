@@ -33,19 +33,63 @@ _FALLBACK_STOPWORDS = {
 
 _RE_CONTROL = re.compile(r"[\r\n\t]+")
 _RE_NON_ALPHANUM = re.compile(r"[^0-9a-zA-Z\s]")
+_RE_URL = re.compile(r"https?://\S+|www\.\S+")
+_RE_MENTION = re.compile(r"@\w+")
+_RE_HASHTAG = re.compile(r"#\w+")
+_RE_HTML = re.compile(r"&\w+;")
+_RE_NUMBERS = re.compile(r"\b\d+\b")
+_RE_EXTRA_SPACES = re.compile(r"\s+")
+_RE_EMOJI = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    "\U00002702-\U000027B0"
+    "\U000024C2-\U0001F251"
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+    "\U0001FA00-\U0001FAFF"  # Chess Symbols
+    "]+",
+    flags=re.UNICODE
+)
 
 
 def _normalize_whitespace(text: str) -> str:
     return _RE_CONTROL.sub(" ", text).strip()
 
 
-def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True) -> str:
-
+def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True, aggressive: bool = True) -> str:
+    """Clean and preprocess text with multiple cleaning steps.
+    
+    Args:
+        text: Input text to clean
+        remove_stopwords: Remove common stopwords
+        lemmatize: Convert words to their base form
+        aggressive: Apply aggressive cleaning (URLs, mentions, numbers, HTML entities)
+    
+    Returns:
+        Cleaned text string
+    """
     if text is None:
         return ""
     if not isinstance(text, str):
         text = str(text)
 
+    # Aggressive cleaning steps
+    if aggressive:
+        # Remove emojis
+        text = _RE_EMOJI.sub(" ", text)
+        # Remove URLs
+        text = _RE_URL.sub(" ", text)
+        # Remove Twitter mentions (@username)
+        text = _RE_MENTION.sub(" ", text)
+        # Remove hashtags
+        text = _RE_HASHTAG.sub(" ", text)
+        # Remove HTML entities like &amp;
+        text = _RE_HTML.sub(" ", text)
+        # Remove standalone numbers
+        text = _RE_NUMBERS.sub(" ", text)
+    
     text = text.lower()
     text = _normalize_whitespace(text)
 
@@ -75,13 +119,15 @@ def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True)
 
     # Fallback simple pipeline
     text = _RE_NON_ALPHANUM.sub(" ", text)
+    text = _RE_EXTRA_SPACES.sub(" ", text)
     parts = [p for p in text.split() if p]
     out = []
     for tok in parts:
         if remove_stopwords and tok in _FALLBACK_STOPWORDS:
             continue
-        # No lemmatizer in fallback; just use token as-is
-        out.append(tok)
+        # Filter out very short tokens (likely noise)
+        if len(tok) >= 2:
+            out.append(tok)
     return " ".join(out)
 
 
