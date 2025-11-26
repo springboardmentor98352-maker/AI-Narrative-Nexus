@@ -3,7 +3,6 @@ import string
 from nltk.corpus import stopwords
 
 def clean_text(text):
-    """Clean & preprocess text: remove URLs, numbers, punctuation, stopwords."""
     
     text = text.lower()
 
@@ -17,5 +16,6 @@ def clean_text(text):
 
     stop_words = set(stopwords.words("english"))
     filtered = [word for word in text.split() if word not in stop_words]
+
 
     return " ".join(filtered)
