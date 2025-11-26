@@ -66,4 +66,5 @@ if "cleaned_full" in st.session_state:
         char_count = len(st.session_state["cleaned_full"])
 
         st.write(f"### 🧮 Word Count: {word_count}")
-        st.write(f"### 🔤 Character Count: {char_count}")
+
+        st.write(f"### 🔤 Character Count: {char_count}") 
