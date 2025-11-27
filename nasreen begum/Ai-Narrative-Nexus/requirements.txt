@@ -1,5 +1,5 @@
 streamlit
 pandas
-nltk
+numpy
 scikit-learn
-spacy
+nltk
