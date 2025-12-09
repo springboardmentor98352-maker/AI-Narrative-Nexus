@@ -3,7 +3,7 @@ python-docx
 pytest
 flake8
 spacy
-streamlit
-python-docx
-pytest
-flake8
+gensim
+scikit-learn
+matplotlib
+pyLDAvis
