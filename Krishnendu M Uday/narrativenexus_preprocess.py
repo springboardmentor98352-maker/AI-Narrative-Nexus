@@ -58,7 +58,7 @@ def _normalize_whitespace(text: str) -> str:
     return _RE_CONTROL.sub(" ", text).strip()
 
 
-def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True, aggressive: bool = True) -> str:
+def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True, aggressive: bool = True, max_length: int = None) -> str:
     """Clean and preprocess text with multiple cleaning steps.
     
     Args:
@@ -66,6 +66,7 @@ def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True,
         remove_stopwords: Remove common stopwords
         lemmatize: Convert words to their base form
         aggressive: Apply aggressive cleaning (URLs, mentions, numbers, HTML entities)
+        max_length: Maximum text length to process (for performance optimization)
     
     Returns:
         Cleaned text string
@@ -74,6 +75,10 @@ def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True,
         return ""
     if not isinstance(text, str):
         text = str(text)
+    
+    # Limit text length for performance
+    if max_length and len(text) > max_length:
+        text = text[:max_length]
 
     # Aggressive cleaning steps
     if aggressive:
