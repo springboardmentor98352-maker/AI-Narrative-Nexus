@@ -2,15 +2,24 @@ import streamlit as st
 import pandas as pd
 from docx import Document
 import re
-import nltk 
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize, sent_tokenize
 from textblob import TextBlob
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px 
+import plotly.express as px
 from collections import Counter
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation, NMF
+from heapq import nlargest
+
+# Transformers for Abstractive Summarization
+try:
+    from transformers import pipeline
+except ImportError:
+    pipeline = None  # Will handle in the function
 
 # PDF Support
 try:
@@ -18,54 +27,13 @@ try:
 except ImportError:
     st.stop()
 
-def read_txt(file): 
-    return file.read().decode("utf-8")
+# Download NLTK data
+@st.cache_resource
+def download_nltk_data():
+    for r in ['stopwords', 'punkt', 'wordnet', 'averaged_perceptron_tagger', 'punkt_tab']:
+        nltk.download(r, quiet=True)
 
-def read_csv(file): 
-    return pd.read_csv(file)
-
-def read_docx(file):
-    return "\n".join([p.text for p in Document(file).paragraphs])
-
-def read_pdf(file):
-    text = ""
-    file.seek(0)
-    try:
-        reader = PyPDF2.PdfReader(file)
-        for page in reader.pages:
-            t = page.extract_text()
-            if t: text += t + "\n"
-    except: pass
-
-    return text.strip() if text.strip() else "[No text extracted from PDF]"
-
-# ========================
-# Text Cleaning
-# ========================
-
-def clean_text(text, remove_stopwords=True, lemmatize=True, min_word_length=2):
-    if not isinstance(text, str) or not text.strip():
-        return "", []
-
-    text = text.lower()
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text)
-    text = re.sub(r'\S+@\S+', '', text)
-    text = re.sub(r'[^a-zA-Z\s]', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    tokens = word_tokenize(text)
-
-    if remove_stopwords:
-        stop_words = set(stopwords.words("english"))
-        tokens = [t for t in tokens if t not in stop_words]
-
-    tokens = [t for t in tokens if len(t) >= min_word_length]
-
-    if lemmatize:
-        lemmatizer = WordNetLemmatizer()
-        tokens = [lemmatizer.lemmatize(t) for t in tokens]
-
-    return " ".join(tokens), tokens
+download_nltk_data()
 
 # ========================
 # Streamlit App
@@ -83,11 +51,29 @@ with st.sidebar:
     apply_lemmatization = st.checkbox("Apply lemmatization", True)
     min_word_len = st.slider("Min word length", 1, 10, 2)
     top_n_words = st.slider("Top N frequent words to show", 5, 50, 20)
+    
+    st.subheader("Topic Modeling Options")
+    num_topics = st.slider("Number of topics", 2, 10, 5)
+    topic_algorithm = st.selectbox("Algorithm", ["LDA", "NMF"])
+    top_words_per_topic = st.slider("Top words per topic", 5, 20, 10)
+    
+    st.subheader("Summarization Options")
+    summ_type = st.selectbox("Summarization Technique", ["None", "Extractive", "Abstractive"])
+    if summ_type == "Extractive":
+        num_sents = st.slider("Number of sentences in summary", 1, 10, 3)
+    elif summ_type == "Abstractive":
+        min_len = st.slider("Min summary length", 10, 100, 30)
+        max_len = st.slider("Max summary length", 50, 500, 130)
 
 # Session State
-for k in ['text_data', 'cleaned_text', 'tokens']:
+for k in ['text_data', 'cleaned_text', 'tokens', 'cleaned_documents', 'topics_data']:
     if k not in st.session_state:
-        st.session_state[k] = "" if k != 'tokens' else []
+        if k == 'topics_data':
+            st.session_state[k] = None
+        elif k in ['tokens', 'cleaned_documents']:
+            st.session_state[k] = []
+        else:
+            st.session_state[k] = ""
 
 tab1, tab2 = st.tabs(["Upload File", "Enter Text Manually"])
 
@@ -134,30 +120,38 @@ if st.session_state.text_data and st.session_state.text_data.strip():
     with col1:
         if st.button("Clean & Analyze Text", type="primary", use_container_width=True):
             with st.spinner("Processing text..."):
-                cleaned_str, token_list = clean_text(
-                    st.session_state.text_data,
-                    remove_stopwords,
-                    apply_lemmatization,
-                    min_word_len
-                )
-                st.session_state.cleaned_text = cleaned_str
-                st.session_state.tokens = token_list
+                sentences = sent_tokenize(st.session_state.text_data)
+                cleaned_docs = []
+                all_tokens = []
+                for sent in sentences:
+                    cleaned_str, tokens = clean_text(
+                        sent,
+                        remove_stopwords,
+                        apply_lemmatization,
+                        min_word_len
+                    )
+                    if cleaned_str:
+                        cleaned_docs.append(cleaned_str)
+                        all_tokens.extend(tokens)
+                
+                st.session_state.cleaned_text = " ".join(cleaned_docs)
+                st.session_state.tokens = all_tokens
+                st.session_state.cleaned_documents = cleaned_docs
 
                 st.success("Analysis Complete!")
 
                 # Token Stats
-                total = len(token_list)
-                unique = len(set(token_list))
+                total = len(all_tokens)
+                unique = len(set(all_tokens))
 
                 c1, c2, c3 = st.columns(3)
                 c1.metric("Total Tokens", total)
                 c2.metric("Unique Tokens", unique)
                 c3.metric("Lexical Diversity", f"{unique/total:.3f}" if total else "0")
-                # Show token preview
+
                 with st.expander("View Tokens (first 100)"):
-                    st.write(token_list[:100])
-                # Sentence Stats
-                sentences = sent_tokenize(st.session_state.cleaned_text)
+                    st.write(all_tokens[:100])
+
                 words_per_sent = [len(word_tokenize(s)) for s in sentences]
                 avg_words = sum(words_per_sent) / len(words_per_sent) if words_per_sent else 0
 
@@ -168,13 +162,12 @@ if st.session_state.text_data and st.session_state.text_data.strip():
 
                 # MOST FREQUENT WORDS
                 st.subheader(f"Top {top_n_words} Most Frequent Words")
-                word_counts = Counter(token_list)
+                word_counts = Counter(all_tokens)
                 common = word_counts.most_common(top_n_words)
 
                 if common:
                     df_freq = pd.DataFrame(common, columns=["Word", "Frequency"])
 
-                    # Interactive Plotly Chart
                     fig = px.bar(
                         df_freq, x="Frequency", y="Word", orientation='h',
                         text="Frequency", color="Frequency",
@@ -185,7 +178,6 @@ if st.session_state.text_data and st.session_state.text_data.strip():
                     fig.update_traces(textposition='outside')
                     st.plotly_chart(fig, use_container_width=True)
 
-                    # Downloadable Table
                     with st.expander("View & Download Frequency Table"):
                         st.dataframe(df_freq, use_container_width=True)
                         csv = df_freq.to_csv(index=False).encode()
@@ -197,6 +189,71 @@ if st.session_state.text_data and st.session_state.text_data.strip():
                         )
                 else:
                     st.info("No tokens after cleaning.")
+
+        # Topic Modeling Section
+        if 'cleaned_documents' in st.session_state and st.session_state.cleaned_documents:
+            if st.button("Perform Topic Modeling", type="primary", use_container_width=True):
+                with st.spinner("Running topic modeling..."):
+                    try:
+                        topics_data, vectorizer, model = perform_topic_modeling(
+                            st.session_state.cleaned_documents,
+                            num_topics=num_topics,
+                            algorithm=topic_algorithm,
+                            top_words=top_words_per_topic
+                        )
+                        st.session_state.topics_data = topics_data
+                        
+                        if not topics_data:
+                            st.warning("Not enough data for topic modeling.")
+                        else:
+                            st.subheader(f"{topic_algorithm} Topics (Top {top_words_per_topic} Words)")
+                            
+                            for topic_idx, top_features, top_scores, normalized_scores in topics_data:
+                                st.write(f"**Topic {topic_idx + 1}**")
+                                
+                                df_topic = pd.DataFrame({
+                                    "Word": top_features,
+                                    "Importance Score": [f"{score:.4f}" for score in top_scores],
+                                    "Relative Importance": normalized_scores
+                                })
+                                
+                                fig_topic = px.bar(
+                                    df_topic, 
+                                    x="Relative Importance", 
+                                    y="Word", 
+                                    orientation='h',
+                                    text="Importance Score",
+                                    color="Relative Importance",
+                                    color_continuous_scale="Blues",
+                                    title=f"Topic {topic_idx + 1} Word Importance"
+                                )
+                                fig_topic.update_layout(height=max(300, 30 * len(top_features)), yaxis={'categoryorder':'total ascending'})
+                                fig_topic.update_traces(textposition='outside')
+                                st.plotly_chart(fig_topic, use_container_width=True)
+                                
+                                # Also show as table
+                                with st.expander(f"View raw scores for Topic {topic_idx + 1}"):
+                                    st.dataframe(df_topic[["Word", "Importance Score"]], use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Error in topic modeling: {str(e)}. Try adjusting parameters or ensuring sufficient text data.")
+
+                # Summarization of Themes and Insights
+                if summ_type != "None" and st.session_state.topics_data:
+                    with st.spinner("Summarizing themes..."):
+                        themes_text = "Identified themes and insights from the text analysis:\n"
+                        for topic_idx, top_features, _, _ in st.session_state.topics_data:
+                            themes_text += f"Topic {topic_idx + 1}: {', '.join(top_features)}\n"
+                        
+                        context_text = st.session_state.text_data[:2000]
+                        full_text_to_summarize = themes_text + "\n\nSample original text: " + context_text
+                        
+                        if summ_type == "Extractive":
+                            summary = extractive_summarize(full_text_to_summarize, num_sentences=num_sents)
+                        elif summ_type == "Abstractive":
+                            summary = abstractive_summarize(full_text_to_summarize, max_length=max_len, min_length=min_len)
+                        
+                        st.subheader("Summary of Themes and Insights")
+                        st.write(summary)
 
     with col2:
         st.subheader("Additional Tools")
