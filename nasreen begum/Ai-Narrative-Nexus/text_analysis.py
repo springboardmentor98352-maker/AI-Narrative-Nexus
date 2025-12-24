@@ -101,6 +101,8 @@ if st.button("Extract Topics"):
 
         for i, topic in enumerate(topics, 1):
             st.write(f"**Topic {i}:** {topic}")
+            
+
 
 
 
