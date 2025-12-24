@@ -16,3 +16,5 @@ def analyze_sentiment(text: str):
         sentiment = "Neutral 😐"
 
     return sentiment, polarity
+    
+
