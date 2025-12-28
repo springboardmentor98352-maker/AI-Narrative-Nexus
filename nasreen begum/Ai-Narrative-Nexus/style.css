@@ -1,0 +1,103 @@
+/* ----------- Global App Background ----------- */
+.stApp {
+    background: linear-gradient(135deg, #e3f2fd, #fce4ec, #e8f5e9);
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ----------- Main Title ----------- */
+h1 {
+    text-align: center;
+    color: #0d47a1;
+    font-weight: 800;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+}
+
+/* ----------- Section Headings ----------- */
+h2, h3 {
+    color: #1b5e20;
+    border-left: 6px solid #4caf50;
+    padding-left: 10px;
+    margin-top: 30px;
+}
+
+/* ----------- Radio & Selectbox ----------- */
+.stRadio, .stSelectbox {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* ----------- Text Areas ----------- */
+textarea {
+    background: #ffffff;
+    border-radius: 12px !important;
+    border: 1px solid #90caf9 !important;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ----------- Buttons ----------- */
+.stButton>button {
+    background: linear-gradient(90deg, #1976d2, #42a5f5);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 25px;
+    padding: 10px 25px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.stButton>button:hover {
+    background: linear-gradient(90deg, #0d47a1, #1e88e5);
+    transform: scale(1.05);
+}
+
+/* ----------- Success / Warning / Error ----------- */
+.stSuccess {
+    background-color: #e8f5e9;
+    border-left: 6px solid #2e7d32;
+    border-radius: 10px;
+}
+
+.stWarning {
+    background-color: #fff8e1;
+    border-left: 6px solid #f9a825;
+    border-radius: 10px;
+}
+
+.stError {
+    background-color: #ffebee;
+    border-left: 6px solid #c62828;
+    border-radius: 10px;
+}
+
+/* ----------- Metrics Cards ----------- */
+[data-testid="metric-container"] {
+    background: linear-gradient(135deg, #ffffff, #e3f2fd);
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    border-left: 5px solid #1976d2;
+}
+
+/* ----------- Topic & Sentiment Output ----------- */
+.stMarkdown {
+    background: rgba(255,255,255,0.85);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+/* ----------- File Uploader ----------- */
+.stFileUploader {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px dashed #64b5f6;
+}
+
+/* ----------- Footer Effect ----------- */
+footer {
+    visibility: hidden;
+}
