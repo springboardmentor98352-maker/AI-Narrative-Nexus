@@ -6,6 +6,11 @@ from data_cleaning import clean_text, get_cosine_similarity, summarize_text
 from sentiment_analysis import analyze_sentiment
 from topic_modeling import get_topics
 
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+load_css("style.css")
 
 nltk.download("stopwords")
 
@@ -102,7 +107,6 @@ if st.button("Extract Topics"):
         for i, topic in enumerate(topics, 1):
             st.write(f"**Topic {i}:** {topic}")
             
-
 
 
 
