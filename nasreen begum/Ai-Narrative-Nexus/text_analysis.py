@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import nltk
+from textblob import TextBlob
+import plotly.graph_objects as go
 
 from data_cleaning import clean_text, get_cosine_similarity, summarize_text
 from sentiment_analysis import analyze_sentiment
@@ -15,8 +17,6 @@ load_css("style.css")
 nltk.download("stopwords")
 
 st.title("🧠 Dynamic Text Analysis Platform")
-
-
 
 
 option = st.radio("Choose input method:", ["Upload File", "Paste Text"])
@@ -86,10 +86,58 @@ if st.button("Calculate Cosine Similarity"):
 
         st.subheader("💬 Sentiment Analysis")
 
+        from textblob import TextBlob
+
+from textblob import TextBlob
+
 if "cleaned" in st.session_state:
-    sentiment, score = analyze_sentiment(st.session_state["cleaned"])
-    st.success(f"Sentiment: **{sentiment}**")
-    st.write(f"Polarity Score: {score:.2f}")
+    text = st.session_state["cleaned"]
+    sentences = text.split(".")
+
+    pos_strength = neg_strength = neu_count = 0
+    pos_count = neg_count = 0
+
+    for s in sentences:
+        s = s.strip()
+        if not s:
+            continue
+
+        polarity = TextBlob(s).sentiment.polarity
+
+        if polarity > 0:
+            pos_strength += polarity
+            pos_count += 1
+        elif polarity < 0:
+            neg_strength += abs(polarity)
+            neg_count += 1
+        else:
+            neu_count += 1
+
+    # Average polarity strength
+    pos_value = pos_strength / pos_count if pos_count else 0
+    neg_value = neg_strength / neg_count if neg_count else 0
+    neu_value = neu_count / max(len(sentences), 1)
+
+    st.success(
+        f"Avg Positive Polarity: {pos_value:.2f}, "
+        f"Avg Negative Polarity: {neg_value:.2f}"
+    )
+
+    # --- Polarity-Based Sentiment Chart ---
+    sentiments = ["Positive 😊", "Neutral 😐", "Negative 😞"]
+    values = [pos_value, neu_value, neg_value]
+
+    fig = go.Figure([
+        go.Bar(x=sentiments, y=values)
+    ])
+
+    fig.update_layout(
+        title="Sentiment Distribution (Polarity-Based)",
+        yaxis_title="Polarity Strength (0–1)",
+        yaxis_range=[0, 1]
+    )
+
+    st.plotly_chart(fig)
 
     st.subheader("📂 Topic Modeling")
 
