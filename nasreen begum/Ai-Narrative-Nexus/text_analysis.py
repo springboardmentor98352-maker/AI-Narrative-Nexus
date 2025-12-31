@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 import nltk
 from textblob import TextBlob
@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 
 from data_cleaning import clean_text, get_cosine_similarity, summarize_text
 from topic_modeling import get_topics
+
 
 def load_css(file_name):
     with open(file_name) as f:
@@ -36,6 +37,7 @@ if "show_filewise" not in st.session_state:
 
 
 option = st.radio("Choose input method:", ["Upload File", "Paste Text"])
+
 
 if option == "Upload File":
     files = st.file_uploader(
@@ -81,16 +83,21 @@ if option == "Upload File":
             height=200
         )
 
+
 else:
-    st.text_area("Paste your text", height=200)
+    pasted_text = st.text_area("Paste your text", height=200)
+
+    if pasted_text.strip():   # ✅ THIS IS THE FIX
+        st.session_state["file_texts"] = [pasted_text]
+        st.session_state["combined_text"] = pasted_text
 
 
 if st.button("🔍 Analyze Text"):
     if not st.session_state["file_texts"]:
-        st.warning("Please upload files.")
+        st.warning("Please upload files or paste text.")
     else:
         st.session_state["show_filewise"] = True
-        st.success("✔ Files analyzed successfully!")
+        st.success("✔ Text analyzed successfully!")
 
 
 if st.session_state.get("show_filewise") and st.session_state["file_texts"]:
@@ -114,7 +121,7 @@ compare_text = st.text_area("Enter text to compare with cleaned text:", height=1
 
 if st.button("Calculate Cosine Similarity"):
     if not st.session_state["file_texts"]:
-        st.error("⚠ Upload files first.")
+        st.error("⚠ Upload files or paste text first.")
     elif not compare_text.strip():
         st.warning("⚠ Enter comparison text.")
     else:
@@ -125,6 +132,7 @@ if st.session_state.get("show_cosine") and st.session_state["file_texts"]:
     for idx, raw_text in enumerate(st.session_state["file_texts"], start=1):
         score = get_cosine_similarity(clean_text(raw_text), compare_text)
         st.markdown(f"**File {idx} Similarity:** {score:.4f}")
+
 
 if st.button("💬 Show Sentiment Analysis"):
     st.session_state["show_sentiment"] = True
@@ -139,10 +147,8 @@ if st.session_state.get("show_sentiment") and st.session_state["file_texts"]:
     ):
         with col:
             cleaned_file = clean_text(raw_text)
-
             polarity_score = TextBlob(cleaned_file).sentiment.polarity
 
-            
             if -0.05 <= polarity_score <= 0.05:
                 polarity_score = 0
 
@@ -173,22 +179,12 @@ if st.session_state.get("show_sentiment") and st.session_state["file_texts"]:
             values = [pos_value, neu_value, neg_value]
             colors = ["#1f77b4", "#ff9800", "#e53935"]
 
-            fig = go.Figure(
-                go.Bar(
-                    x=sentiments,
-                    y=values,
-                    marker_color=colors
-                )
-            )
+            fig = go.Figure(go.Bar(x=sentiments, y=values, marker_color=colors))
 
             fig.add_annotation(
                 text=f"Polarity Score: {polarity_score:.3f}",
-                x=0.5,
-                y=1.15,
-                xref="paper",
-                yref="paper",
-                showarrow=False,
-                font=dict(size=14, color="black")
+                x=0.5, y=1.15, xref="paper", yref="paper",
+                showarrow=False, font=dict(size=14)
             )
 
             fig.update_layout(
@@ -199,6 +195,7 @@ if st.session_state.get("show_sentiment") and st.session_state["file_texts"]:
             )
 
             st.plotly_chart(fig, use_container_width=True)
+
 
 st.subheader("📂 Topic Modeling Per File")
 
