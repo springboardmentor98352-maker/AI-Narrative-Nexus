@@ -99,28 +99,66 @@ def clean_text(text: str, remove_stopwords: bool = True, lemmatize: bool = True,
     text = _normalize_whitespace(text)
 
     # spaCy has a default max length of ~1M characters; truncate if needed
-    MAX_SPACY_LENGTH = 1000000
+    # Further limit to prevent memory allocation errors
+    MAX_SPACY_LENGTH = 100000  # Reduced from 1M to 100K to prevent memory errors
     if len(text) > MAX_SPACY_LENGTH:
         text = text[:MAX_SPACY_LENGTH]
 
     if SPACY_AVAILABLE and _nlp is not None:
-        doc = _nlp(text)
-        tokens: List[str] = []
-        for tok in doc:
-            if tok.is_space or tok.is_punct:
-                continue
-            if remove_stopwords and tok.is_stop:
-                continue
-            if lemmatize:
-                lemma = tok.lemma_.strip()
-                # spaCy uses -PRON- for some pronouns; fallback to text in that case.
-                if lemma and lemma != "-PRON-":
-                    tokens.append(lemma)
-                else:
-                    tokens.append(tok.text)
-            else:
-                tokens.append(tok.text)
-        return " ".join(tokens)
+        # Process in smaller chunks to avoid memory allocation errors
+        chunk_size = 50000  # Process 50K characters at a time
+        if len(text) > chunk_size:
+            # Split into chunks
+            chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+            all_tokens = []
+            
+            for chunk in chunks:
+                try:
+                    doc = _nlp(chunk)
+                    for tok in doc:
+                        if tok.is_space or tok.is_punct:
+                            continue
+                        if remove_stopwords and tok.is_stop:
+                            continue
+                        if lemmatize:
+                            lemma = tok.lemma_.strip()
+                            if lemma and lemma != "-PRON-":
+                                all_tokens.append(lemma)
+                            else:
+                                all_tokens.append(tok.text)
+                        else:
+                            all_tokens.append(tok.text)
+                except Exception:
+                    # If chunk processing fails, use fallback
+                    chunk = _RE_NON_ALPHANUM.sub(" ", chunk)
+                    chunk = _RE_EXTRA_SPACES.sub(" ", chunk)
+                    parts = [p for p in chunk.split() if p and len(p) >= 2]
+                    all_tokens.extend(parts)
+            
+            return " ".join(all_tokens)
+        else:
+            # Process normally for smaller text
+            try:
+                doc = _nlp(text)
+                tokens: List[str] = []
+                for tok in doc:
+                    if tok.is_space or tok.is_punct:
+                        continue
+                    if remove_stopwords and tok.is_stop:
+                        continue
+                    if lemmatize:
+                        lemma = tok.lemma_.strip()
+                        # spaCy uses -PRON- for some pronouns; fallback to text in that case.
+                        if lemma and lemma != "-PRON-":
+                            tokens.append(lemma)
+                        else:
+                            tokens.append(tok.text)
+                    else:
+                        tokens.append(tok.text)
+                return " ".join(tokens)
+            except Exception:
+                # Fallback if spaCy fails
+                pass
 
     # Fallback simple pipeline
     text = _RE_NON_ALPHANUM.sub(" ", text)
@@ -142,10 +180,34 @@ def tokenize(text: str) -> List[str]:
         return []
     if not isinstance(text, str):
         text = str(text)
+    
+    # Limit text size to prevent memory errors
+    MAX_LENGTH = 100000
+    if len(text) > MAX_LENGTH:
+        text = text[:MAX_LENGTH]
 
     if SPACY_AVAILABLE and _nlp is not None:
-        doc = _nlp(text)
-        return [tok.text for tok in doc if not (tok.is_space or tok.is_punct)]
+        try:
+            # Process in chunks if text is large
+            chunk_size = 50000
+            if len(text) > chunk_size:
+                chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+                all_tokens = []
+                for chunk in chunks:
+                    try:
+                        doc = _nlp(chunk)
+                        all_tokens.extend([tok.text for tok in doc if not (tok.is_space or tok.is_punct)])
+                    except Exception:
+                        # Fallback for this chunk
+                        chunk_tokens = _RE_NON_ALPHANUM.sub(" ", chunk).split()
+                        all_tokens.extend([t for t in chunk_tokens if len(t) >= 2])
+                return all_tokens
+            else:
+                doc = _nlp(text)
+                return [tok.text for tok in doc if not (tok.is_space or tok.is_punct)]
+        except Exception:
+            # Fallback if spaCy fails
+            pass
 
     text = _RE_NON_ALPHANUM.sub(" ", text)
     return [t for t in text.split() if t]

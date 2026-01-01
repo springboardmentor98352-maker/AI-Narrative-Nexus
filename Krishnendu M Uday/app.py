@@ -10,6 +10,18 @@ from narrativenexus_utils import (
 )
 from narrativenexus_preprocess import clean_text, tokenize, SPACY_AVAILABLE
 from narrativenexus_topic_modeling import TopicModelManager, GENSIM_AVAILABLE, SKLEARN_AVAILABLE
+from narrativenexus_sentiment import (
+    SentimentAnalyzer, TopicSentimentAnalyzer,
+    VADER_AVAILABLE, TEXTBLOB_AVAILABLE
+)
+from narrativenexus_summarization import (
+    TextSummarizer, InsightGenerator,
+    SUMY_AVAILABLE
+)
+from narrativenexus_reporting import (
+    ReportGenerator,
+    REPORTLAB_AVAILABLE
+)
 
 # Set folder to save uploaded samples
 DATA_DIR = "sample_data"
@@ -243,7 +255,7 @@ st.markdown("""
 
 st.title("NarrativeNexus")
 
-tabs = st.tabs(["📤 Upload Files", "📊 File Analysis", "🔬 Text Processing", "🎯 Topic Modeling"])
+tabs = st.tabs(["📤 Upload Files", "📊 File Analysis", "🔬 Text Processing", "🎯 Topic Modeling", "😊 Sentiment & Reports"])
 
 # Upload Files Tab
 with tabs[0]:
@@ -1696,5 +1708,419 @@ with tabs[3]:
                     - ⚠️ Less interpretable
                     - ⚠️ Topics may be too separated
                     """)
+    else:
+        st.info("📭 No files available. Upload files in the Upload Files tab!")
+
+# Sentiment Analysis & Reports Tab
+with tabs[4]:
+    st.markdown("### 😊 Sentiment Analysis & Report Generation")
+    st.markdown("Analyze sentiment, generate summaries, and create professional reports")
+    
+    sample_files = get_sample_files(DATA_DIR)
+    if sample_files:
+        selected = st.selectbox("📁 Choose a file to analyze", sample_files, key="sentiment_select")
+        
+        if selected:
+            file_path = os.path.join(DATA_DIR, selected)
+            
+            # Analysis options
+            col1, col2 = st.columns(2)
+            with col1:
+                sentiment_method = st.radio(
+                    "Sentiment Analysis Method",
+                    ["VADER (Recommended)", "TextBlob"],
+                    help="VADER is faster and better for social media/reviews"
+                )
+            
+            with col2:
+                summary_method = st.radio(
+                    "Summarization Method",
+                    ["TextRank (Fast)", "LSA", "LexRank"],
+                    help="TextRank is recommended for general use"
+                )
+            
+            summary_sentences = st.slider("Summary Length (sentences)", min_value=1, max_value=10, value=3)
+            
+            # Main analysis button
+            if st.button("🚀 Analyze Sentiment & Generate Report", use_container_width=True):
+                with st.spinner("Analyzing..."):
+                    try:
+                        # Read file
+                        raw = read_full_text(file_path)
+                        
+                        if raw.startswith("[Error") or raw.startswith("[Cannot"):
+                            st.error(raw)
+                        else:
+                            # Clean text
+                            cleaned = clean_text(raw)
+                            
+                            # Split into documents/paragraphs
+                            docs = [p.strip() for p in cleaned.split('\n\n') if len(p.strip()) > 30]
+                            if len(docs) < 5:
+                                docs = [s.strip() for s in cleaned.split('.') if len(s.strip()) > 20]
+                            
+                            if not docs:
+                                docs = [cleaned]
+                            
+                            # Sentiment Analysis
+                            st.markdown("---")
+                            st.markdown("### 😊 Sentiment Analysis Results")
+                            
+                            method = "vader" if "VADER" in sentiment_method else "textblob"
+                            
+                            if (method == "vader" and not VADER_AVAILABLE) or (method == "textblob" and not TEXTBLOB_AVAILABLE):
+                                st.error(f"❌ {method.upper()} not available. Install with: pip install {'vaderSentiment' if method == 'vader' else 'textblob'}")
+                            else:
+                                analyzer = SentimentAnalyzer(method=method)
+                                
+                                # Analyze overall sentiment
+                                distribution = analyzer.get_sentiment_distribution(docs)
+                                
+                                st.markdown("#### Overall Sentiment Distribution")
+                                col1, col2, col3 = st.columns(3)
+                                
+                                with col1:
+                                    st.metric(
+                                        "😊 Positive", 
+                                        f"{distribution['positive_pct']:.1f}%",
+                                        f"{distribution['positive']} docs"
+                                    )
+                                
+                                with col2:
+                                    st.metric(
+                                        "😐 Neutral", 
+                                        f"{distribution['neutral_pct']:.1f}%",
+                                        f"{distribution['neutral']} docs"
+                                    )
+                                
+                                with col3:
+                                    st.metric(
+                                        "😞 Negative", 
+                                        f"{distribution['negative_pct']:.1f}%",
+                                        f"{distribution['negative']} docs"
+                                    )
+                                
+                                # Sentiment breakdown
+                                st.markdown("#### Detailed Analysis")
+                                col1, col2 = st.columns(2)
+                                
+                                with col1:
+                                    st.metric("Average Sentiment Score", f"{distribution['avg_score']:.4f}")
+                                    st.metric("Total Documents", f"{distribution['total_texts']:,}")
+                                
+                                with col2:
+                                    st.metric("Average Confidence", f"{distribution['avg_confidence']:.4f}")
+                                    st.metric("Analysis Method", method.upper())
+                                
+                                # Sentiment visualization
+                                try:
+                                    import matplotlib.pyplot as plt
+                                    
+                                    fig, ax = plt.subplots(figsize=(10, 5))
+                                    
+                                    sentiments = ['Positive', 'Neutral', 'Negative']
+                                    values = [
+                                        distribution['positive_pct'],
+                                        distribution['neutral_pct'],
+                                        distribution['negative_pct']
+                                    ]
+                                    colors = ['#28a745', '#6c757d', '#dc3545']
+                                    
+                                    bars = ax.bar(sentiments, values, color=colors, alpha=0.8, edgecolor='white', linewidth=2)
+                                    ax.set_ylabel('Percentage (%)', fontsize=12, fontweight='bold')
+                                    ax.set_title('Sentiment Distribution', fontsize=14, fontweight='bold')
+                                    ax.set_ylim(0, 100)
+                                    ax.grid(axis='y', alpha=0.3, linestyle='--')
+                                    
+                                    # Add value labels
+                                    for bar, value in zip(bars, values):
+                                        height = bar.get_height()
+                                        ax.text(bar.get_x() + bar.get_width()/2., height,
+                                               f'{value:.1f}%',
+                                               ha='center', va='bottom', fontsize=11, fontweight='bold')
+                                    
+                                    plt.tight_layout()
+                                    st.pyplot(fig)
+                                    plt.close()
+                                except:
+                                    pass
+                                
+                                # Sample sentiment analysis
+                                st.markdown("#### Sample Document Sentiments")
+                                with st.expander("View first 5 documents with sentiment"):
+                                    for i, doc in enumerate(docs[:5], 1):
+                                        result = analyzer.analyze(doc)
+                                        
+                                        # Color code based on sentiment
+                                        if result['label'] == 'positive':
+                                            color = "#d4edda"
+                                            icon = "😊"
+                                        elif result['label'] == 'negative':
+                                            color = "#f8d7da"
+                                            icon = "😞"
+                                        else:
+                                            color = "#d1ecf1"
+                                            icon = "😐"
+                                        
+                                        st.markdown(f"""
+                                            <div style="background: {color}; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                                <strong>{icon} Document {i}: {result['label'].upper()}</strong> (Score: {result['score']:.3f})
+                                                <br><em>{doc[:150]}...</em>
+                                            </div>
+                                        """, unsafe_allow_html=True)
+                            
+                            # Text Summarization
+                            st.markdown("---")
+                            st.markdown("### 📝 Document Summary (100 Words)")
+                            
+                            summary_map = {
+                                "TextRank (Fast)": "textrank",
+                                "LSA": "lsa",
+                                "LexRank": "lexrank"
+                            }
+                            
+                            sum_method = summary_map[summary_method]
+                            summary = ""  # Initialize summary
+                            
+                            if not SUMY_AVAILABLE:
+                                st.error("❌ Sumy not available. Install with: pip install sumy")
+                            else:
+                                try:
+                                    # Limit text size for summarization to prevent memory issues
+                                    max_chars = 50000  # Limit to ~50K characters
+                                    text_to_summarize = raw[:max_chars] if len(raw) > max_chars else raw
+                                    
+                                    if len(raw) > max_chars:
+                                        st.warning(f"⚠️ Text is too large ({len(raw):,} chars). Analyzing first {max_chars:,} characters.")
+                                    
+                                    st.info("📊 Generating intelligent summary with coherent flow...")
+                                    
+                                    summarizer = TextSummarizer(method=sum_method)
+                                    
+                                    # Use the new coherent summary method for ~100 words
+                                    summary = summarizer.generate_coherent_summary(text_to_summarize, target_words=100)
+                                    
+                                    # Count actual words in summary
+                                    word_count = len(summary.split())
+                                    
+                                    st.markdown("#### 📋 Executive Summary")
+                                    st.markdown(f"""
+                                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                                    padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                                            <p style="font-size: 17px; line-height: 2.0; text-align: justify; 
+                                                      color: white; margin: 0; font-weight: 400; letter-spacing: 0.4px;">
+                                            {summary}
+                                            </p>
+                                        </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Statistics
+                                    st.markdown("")
+                                    col1, col2, col3 = st.columns(3)
+                                    with col1:
+                                        st.metric("📄 Original", f"{len(text_to_summarize):,} chars")
+                                    with col2:
+                                        st.metric("📝 Summary", f"{word_count} words")
+                                    with col3:
+                                        compression = (1 - len(summary)/len(text_to_summarize)) * 100 if len(text_to_summarize) > 0 else 0
+                                        st.metric("🗜️ Compression", f"{compression:.1f}%")
+                                    
+                                    # Key takeaways
+                                    st.markdown("---")
+                                    st.markdown("#### 🔑 Key Points")
+                                    
+                                    # Extract top 5 key sentences as bullet points
+                                    key_sentences = summarizer.extract_key_sentences(text_to_summarize, count=5)
+                                    
+                                    for i, sentence in enumerate(key_sentences, 1):
+                                        # Truncate very long sentences for readability
+                                        display_sent = sentence if len(sentence) < 200 else sentence[:197] + "..."
+                                        st.markdown(f"• {display_sent}")
+                                
+                                except Exception as e:
+                                    st.error(f"Summarization error: {str(e)}")
+                                    import traceback
+                                    with st.expander("Error details"):
+                                        st.code(traceback.format_exc())
+                                    summary = ""  # Ensure summary is defined even on error
+                            
+                            # Report Generation
+                            st.markdown("---")
+                            st.markdown("### 📄 Generate Professional Reports")
+                            
+                            st.info("💡 Reports include sentiment analysis, summary, and all statistics")
+                            
+                            col1, col2, col3 = st.columns(3)
+                            
+                            # Generate reports data
+                            try:
+                                generator = ReportGenerator(project_name=f"Analysis: {selected}")
+                                
+                                # Prepare data
+                                topics_data = [(0, [("document", 0.5), ("analysis", 0.4)])]
+                                sentiment_data = {
+                                    0: {
+                                        "positive_pct": distribution['positive_pct'],
+                                        "negative_pct": distribution['negative_pct'],
+                                        "neutral_pct": distribution['neutral_pct']
+                                    }
+                                } if (VADER_AVAILABLE or TEXTBLOB_AVAILABLE) else None
+                                
+                                stats = {
+                                    "total_documents": distribution['total_texts'] if (VADER_AVAILABLE or TEXTBLOB_AVAILABLE) else len(docs),
+                                    "original_length": len(raw),
+                                    "summary_length": len(summary) if SUMY_AVAILABLE else 0
+                                }
+                                
+                                # HTML Report
+                                html_report = generator.generate_html_report(
+                                    topics=topics_data,
+                                    sentiment_data=sentiment_data,
+                                    summary=summary if SUMY_AVAILABLE else None,
+                                    stats=stats
+                                )
+                                
+                                # JSON Data
+                                import json
+                                json_data = {
+                                    "file": selected,
+                                    "sentiment": {
+                                        "positive_pct": distribution['positive_pct'],
+                                        "negative_pct": distribution['negative_pct'],
+                                        "neutral_pct": distribution['neutral_pct'],
+                                        "avg_score": distribution['avg_score']
+                                    } if (VADER_AVAILABLE or TEXTBLOB_AVAILABLE) else {},
+                                    "summary": summary if SUMY_AVAILABLE else "",
+                                    "stats": {
+                                        "original_length": len(raw),
+                                        "documents_analyzed": len(docs)
+                                    }
+                                }
+                                json_str = json.dumps(json_data, indent=2)
+                                
+                                # PDF Report
+                                pdf_bytes = None
+                                if REPORTLAB_AVAILABLE:
+                                    try:
+                                        pdf_path = generator.generate_pdf_report(
+                                            topics=topics_data,
+                                            sentiment_data=sentiment_data,
+                                            summary=summary if SUMY_AVAILABLE else None,
+                                            stats=stats,
+                                            output_path=f"temp_report_{selected}.pdf"
+                                        )
+                                        
+                                        with open(pdf_path, "rb") as f:
+                                            pdf_bytes = f.read()
+                                        
+                                        # Clean up temp file
+                                        if os.path.exists(pdf_path):
+                                            os.remove(pdf_path)
+                                    except Exception as e:
+                                        st.error(f"PDF generation error: {str(e)}")
+                                
+                                # Download buttons
+                                with col1:
+                                    st.download_button(
+                                        label="📥 Download HTML Report",
+                                        data=html_report,
+                                        file_name=f"report_{selected}.html",
+                                        mime="text/html",
+                                        use_container_width=True
+                                    )
+                                
+                                with col2:
+                                    st.download_button(
+                                        label="📥 Download JSON Data",
+                                        data=json_str,
+                                        file_name=f"analysis_{selected}.json",
+                                        mime="application/json",
+                                        use_container_width=True
+                                    )
+                                
+                                with col3:
+                                    if REPORTLAB_AVAILABLE and pdf_bytes:
+                                        st.download_button(
+                                            label="📥 Download PDF Report",
+                                            data=pdf_bytes,
+                                            file_name=f"report_{selected}.pdf",
+                                            mime="application/pdf",
+                                            use_container_width=True
+                                        )
+                                    else:
+                                        st.button(
+                                            label="📥 Download PDF Report",
+                                            disabled=True,
+                                            use_container_width=True,
+                                            help="ReportLab not available or PDF generation failed"
+                                        )
+                            
+                            except Exception as e:
+                                st.error(f"Report generation error: {str(e)}")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Analysis error: {str(e)}")
+                        import traceback
+                        with st.expander("View error details"):
+                            st.code(traceback.format_exc())
+        
+        # Info boxes
+        st.markdown("---")
+        st.markdown("### 📚 Feature Information")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+            **Sentiment Analysis**
+            - 😊 Positive/Negative/Neutral detection
+            - 📊 Distribution analysis
+            - 🎯 Confidence scores
+            - ⚡ Fast processing
+            """)
+        
+        with col2:
+            st.markdown("""
+            **Text Summarization**
+            - 📝 Extractive summaries
+            - 🔑 Key sentence extraction
+            - ⚙️ Multiple algorithms
+            - 📏 Adjustable length
+            """)
+        
+        with col3:
+            st.markdown("""
+            **Report Generation**
+            - 📄 HTML reports
+            - 📕 PDF export
+            - 💾 JSON data export
+            - 📊 Professional formatting
+            """)
+        
+        # Library status
+        st.markdown("---")
+        st.markdown("### 🔧 Library Status")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            status = "✅ Available" if VADER_AVAILABLE else "❌ Not installed"
+            st.metric("VADER", status)
+        
+        with col2:
+            status = "✅ Available" if TEXTBLOB_AVAILABLE else "❌ Not installed"
+            st.metric("TextBlob", status)
+        
+        with col3:
+            status = "✅ Available" if SUMY_AVAILABLE else "❌ Not installed"
+            st.metric("Sumy", status)
+        
+        with col4:
+            status = "✅ Available" if REPORTLAB_AVAILABLE else "❌ Not installed"
+            st.metric("ReportLab", status)
+        
+        if not all([VADER_AVAILABLE, SUMY_AVAILABLE, REPORTLAB_AVAILABLE]):
+            st.warning("⚠️ Some libraries are missing. Install with: pip install vaderSentiment textblob sumy reportlab")
+    
     else:
         st.info("📭 No files available. Upload files in the Upload Files tab!")

@@ -7,3 +7,10 @@ gensim
 scikit-learn
 matplotlib
 pyLDAvis
+vaderSentiment
+textblob
+transformers
+torch
+sumy
+reportlab
+weasyprint
