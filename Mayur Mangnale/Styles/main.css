@@ -1,0 +1,545 @@
+/* ===================== ROOT & GLOBAL STYLES ===================== */
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #ec4899;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --dark-bg: #0f172a;
+    --light-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-dark: #1e293b;
+    --text-light: #64748b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 25%, #fce7f3 75%, #f3e8ff 100%);
+    min-height: 100vh;
+    background-attachment: fixed;
+}
+
+/* ===================== CONTAINER & LAYOUT ===================== */
+.block-container {
+    padding-top: 2.5rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 1400px !important;
+    background: transparent;
+    min-height: 100vh;
+}
+
+/* ===================== HEADER & BRANDING ===================== */
+.center-text {
+    text-align: center;
+    animation: slideDownFadeIn 1s ease-out;
+    padding: 2rem 0;
+}
+
+.center-text h1 {
+    font-size: 4.5rem;
+    font-weight: 950;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 25%, #d946ef 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -3px;
+    margin-bottom: 0.2rem;
+    text-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    z-index: 2;
+}
+
+.center-text h1::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 110%;
+    height: 110%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent);
+    border-radius: 50%;
+    filter: blur(30px);
+    z-index: -1;
+}
+
+.center-text h3 {
+    font-size: 1.8rem;
+    color: #475569;
+    font-weight: 700;
+    margin-top: 0.2rem;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.center-text p {
+    font-size: 1.2rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 0.8rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: fadeInUp 1.2s ease-out 0.3s backwards;
+}
+
+.spacing {
+    margin-top: 0;
+}
+
+/* ===================== MENU STYLING ===================== */
+[data-testid="stHorizontalBlock"] {
+    gap: 1rem;
+}
+
+.streamlit-expanderHeader {
+    background: transparent !important;
+}
+
+/* ===================== CARD COMPONENTS ===================== */
+.card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    margin-bottom: 2rem;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.card:hover {
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    transform: translateY(-8px);
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.card:hover::after {
+    left: 100%;
+}
+
+.card h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card h3 span {
+    font-size: 1.8rem;
+}
+
+.card p {
+    font-size: 1.05rem;
+    color: #475569;
+    line-height: 1.8;
+    margin: 0.8rem 0;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+/* ===================== METRIC CARDS ===================== */
+.metric-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.8));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    cursor: default;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.1), transparent 50%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.metric-card:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+    transform: translateY(-12px) scale(1.02);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+}
+
+.metric-card:hover::before {
+    opacity: 1;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 1rem;
+}
+
+.metric-value {
+    font-size: 3.2rem;
+    font-weight: 950;
+    background: linear-gradient(135deg, #6366f1, #d946ef);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===================== TOKEN CHIPS ===================== */
+.token-chip {
+    padding: 12px 20px;
+    border-radius: 30px;
+    margin: 8px;
+    display: inline-block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    cursor: default;
+    letter-spacing: 0.4px;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.token-chip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1), transparent 70%);
+    border-radius: 30px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.token-chip:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.token-chip:hover::before {
+    opacity: 1;
+}
+
+/* ===================== SENTIMENT STYLING ===================== */
+.sentiment-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.sentiment-emoji {
+    font-size: 4rem;
+    margin: 1rem 0;
+    animation: bounce 2s infinite;
+}
+
+.sentiment-label {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 0.5rem;
+}
+
+.sentiment-positive {
+    color: var(--success-color);
+}
+
+.sentiment-negative {
+    color: var(--danger-color);
+}
+
+.sentiment-neutral {
+    color: var(--warning-color);
+}
+
+/* ===================== SUMMARY TEXT ===================== */
+.summary-text {
+    font-size: 1rem;
+    color: var(--text-dark);
+    line-height: 1.8;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* ===================== CHART STYLING ===================== */
+.chart-container {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ===================== INPUT STYLING ===================== */
+.input-section {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.input-section:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.8rem;
+    display: block;
+}
+
+/* ===================== BUTTON STYLING ===================== */
+.stButton > button {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 32px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+    letter-spacing: 0.5px !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
+}
+
+.stButton > button:active {
+    transform: translateY(0) !important;
+}
+
+/* ===================== ALERTS & MESSAGES ===================== */
+.stSuccess {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-left: 4px solid var(--success-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+.stError {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-left: 4px solid var(--danger-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+.stWarning {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    border-left: 4px solid var(--warning-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+/* ===================== TEXT STYLING ===================== */
+.stMarkdown {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+}
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes slideDownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+        filter: blur(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-12px) scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(99, 102, 241, 0.8);
+    }
+}
+
+/* ===================== RESPONSIVE DESIGN ===================== */
+@media (max-width: 768px) {
+    .center-text h1 {
+        font-size: 2.5rem;
+    }
+
+    .center-text h3 {
+        font-size: 1.2rem;
+    }
+
+    .center-text p {
+        font-size: 0.95rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    .card h3 {
+        font-size: 1.2rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+    }
+
+    .sentiment-emoji {
+        font-size: 3rem;
+    }
+
+    .metric-container {
+        grid-template-columns: 1fr;
+    }
+
+    .stButton > button {
+        width: 100% !important;
+    }
+}
+
+/* ===================== SCROLLBAR STYLING ===================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
