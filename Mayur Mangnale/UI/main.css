@@ -1,0 +1,437 @@
+/* ===================== ROOT & GLOBAL STYLES ===================== */
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #ec4899;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --dark-bg: #0f172a;
+    --light-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-dark: #1e293b;
+    --text-light: #64748b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===================== CONTAINER & LAYOUT ===================== */
+.block-container {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1200px !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+}
+
+/* ===================== HEADER & BRANDING ===================== */
+.center-text {
+    text-align: center;
+    animation: slideDownFadeIn 0.8s ease-out;
+}
+
+.center-text h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -2px;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
+}
+
+.center-text h3 {
+    font-size: 1.5rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.center-text p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-top: 0.5rem;
+    letter-spacing: 2px;
+}
+
+.spacing {
+    margin-top: -10px;
+}
+
+/* ===================== MENU STYLING ===================== */
+[data-testid="stHorizontalBlock"] {
+    gap: 1rem;
+}
+
+.streamlit-expanderHeader {
+    background: transparent !important;
+}
+
+/* ===================== CARD COMPONENTS ===================== */
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card h3 span {
+    font-size: 1.6rem;
+}
+
+.card p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0.5rem 0;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    margin: 1rem 0;
+}
+
+/* ===================== METRIC CARDS ===================== */
+.metric-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 1.8rem;
+    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.metric-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.12);
+    transform: translateY(-4px);
+}
+
+.metric-label {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.8rem;
+}
+
+.metric-value {
+    font-size: 2.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===================== TOKEN CHIPS ===================== */
+.token-chip {
+    padding: 10px 18px;
+    border-radius: 25px;
+    margin: 6px;
+    display: inline-block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: default;
+    letter-spacing: 0.3px;
+    position: relative;
+}
+
+.token-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ===================== SENTIMENT STYLING ===================== */
+.sentiment-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.sentiment-emoji {
+    font-size: 4rem;
+    margin: 1rem 0;
+    animation: bounce 2s infinite;
+}
+
+.sentiment-label {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 0.5rem;
+}
+
+.sentiment-positive {
+    color: var(--success-color);
+}
+
+.sentiment-negative {
+    color: var(--danger-color);
+}
+
+.sentiment-neutral {
+    color: var(--warning-color);
+}
+
+/* ===================== SUMMARY TEXT ===================== */
+.summary-text {
+    font-size: 1rem;
+    color: var(--text-dark);
+    line-height: 1.8;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* ===================== CHART STYLING ===================== */
+.chart-container {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ===================== INPUT STYLING ===================== */
+.input-section {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.input-section:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.input-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.8rem;
+    display: block;
+}
+
+/* ===================== BUTTON STYLING ===================== */
+.stButton > button {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 32px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+    letter-spacing: 0.5px !important;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
+}
+
+.stButton > button:active {
+    transform: translateY(0) !important;
+}
+
+/* ===================== ALERTS & MESSAGES ===================== */
+.stSuccess {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-left: 4px solid var(--success-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+.stError {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-left: 4px solid var(--danger-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+.stWarning {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    border-left: 4px solid var(--warning-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+/* ===================== TEXT STYLING ===================== */
+.stMarkdown {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
+}
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes slideDownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===================== RESPONSIVE DESIGN ===================== */
+@media (max-width: 768px) {
+    .center-text h1 {
+        font-size: 2.5rem;
+    }
+
+    .center-text h3 {
+        font-size: 1.2rem;
+    }
+
+    .center-text p {
+        font-size: 0.95rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    .card h3 {
+        font-size: 1.2rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+    }
+
+    .sentiment-emoji {
+        font-size: 3rem;
+    }
+
+    .metric-container {
+        grid-template-columns: 1fr;
+    }
+
+    .stButton > button {
+        width: 100% !important;
+    }
+}
+
+/* ===================== SCROLLBAR STYLING ===================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
