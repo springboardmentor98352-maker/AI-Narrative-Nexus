@@ -17,6 +17,13 @@ import base64
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 
+# WordCloud Support (fallback to matplotlib if wordcloud not installed)
+try:
+    from wordcloud import WordCloud
+    WORDCLOUD_AVAILABLE = True
+except ImportError:
+    WORDCLOUD_AVAILABLE = False
+
 # ========================
 # Word Cloud Utilities
 # ========================
