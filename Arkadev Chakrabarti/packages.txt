@@ -1,10 +1,15 @@
-List of Python libraries required to run the code:
+List of Python libraries required to run the code (needs to be imported):
 
 streamlit
 python-docx
 pandas
+io
+base64
 seaborn
 numpy
+matplotlib
 scikit-learn
 nltk (Natural Language Processing Toolkit)
+textblob
+wordcloud
 plotly
